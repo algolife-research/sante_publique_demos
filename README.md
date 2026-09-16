@@ -49,10 +49,11 @@ sérogroupe, puis remplace `__DATA__` dans le gabarit.
 
 ## Publication
 
-GitHub Pages sert la branche `main` depuis la racine : réglage *Settings → Pages → Build
-and deployment*, source « Deploy from a branch », branche `main`, dossier `/ (root)`.
-Aucune construction côté CI n'est nécessaire, les fichiers servis sont déjà dans le dépôt.
-Le fichier `.nojekyll` évite que Jekyll n'ignore certains chemins.
+Le site est publié par le workflow `.github/workflows/pages.yml` : chaque push sur `main`
+téléverse la racine du dépôt et la déploie sur GitHub Pages (`actions/deploy-pages`). Le
+réglage correspondant dans le dépôt est *Settings → Pages → Build and deployment*, source
+« GitHub Actions ». Le fichier `.nojekyll` reste utile si l'on repasse un jour à un
+déploiement direct depuis la branche.
 
 ## Licences
 
