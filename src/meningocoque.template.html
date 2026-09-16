@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Méningocoques et couverture vaccinale en France</title>
+<style>
+:root{
+  --paper:#EEF1EC;
+  --paper-2:#E6EAE4;
+  --ink:#17211C;
+  --ink-soft:#4C5A53;
+  --rule:#C6D0C7;
+  --pink:#C0286A;
+  --teal:#28756C;
+  --na:#D9DCD5;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Avenir Next","Segoe UI",system-ui,-apple-system,sans-serif;
+  font-size:15px;
+  line-height:1.45;
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin:0 auto;padding:34px 26px 70px}
+h1{
+  font-family:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  font-weight:400;
+  font-size:clamp(30px,4.6vw,50px);
+  line-height:1.06;
+  letter-spacing:-0.012em;
+  margin:0 0 14px;
+  max-width:19ch;
+}
+h1 em{font-style:italic}
+.stand{
+  font-family:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  font-size:17.5px;line-height:1.55;max-width:62ch;color:var(--ink-soft);margin:0 0 26px;
+}
+header{border-bottom:1px solid var(--rule);padding-bottom:22px;margin-bottom:22px}
+.kicker{font-size:12.5px;letter-spacing:.05em;color:var(--ink-soft);margin:0 0 14px}
+.back{color:inherit;text-decoration:none;border-bottom:1px solid var(--rule)}
+.back:hover{color:var(--pink)}
+
+/* controls */
+.sechead{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:12px}
+.ctlrow{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:flex-start;margin-bottom:14px}
+.yearblock{margin-bottom:18px}
+.hint{font-size:12px;color:var(--ink-soft);margin-top:5px;max-width:44ch}
+.ctl{display:flex;flex-direction:column;gap:7px}
+.ctl > .lab{font-size:12.5px;color:var(--ink-soft);letter-spacing:.01em}
+.seg{display:flex;border:1px solid var(--rule);background:var(--paper-2)}
+.seg button{
+  font:inherit;font-size:13.5px;border:0;background:transparent;color:var(--ink-soft);
+  padding:7px 13px;cursor:pointer;border-right:1px solid var(--rule);white-space:nowrap;
+}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.seg button:focus-visible{outline:2px solid var(--pink);outline-offset:1px}
+select{
+  font:inherit;font-size:13.5px;padding:6px 9px;background:var(--paper-2);
+  border:1px solid var(--rule);color:var(--ink);border-radius:0;max-width:100%;min-width:260px;
+}
+.yearctl{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.yearnum{
+  font-family:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  font-size:34px;line-height:1;min-width:2.9ch;
+}
+input[type=range]{width:200px;accent-color:var(--pink)}
+.play{
+  font:inherit;font-size:13px;border:1px solid var(--rule);background:var(--paper-2);
+  color:var(--ink);padding:6px 12px;cursor:pointer;
+}
+.play:focus-visible,select:focus-visible{outline:2px solid var(--pink);outline-offset:1px}
+
+/* layout */
+.grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:34px;align-items:start}
+.mapbox{position:relative}
+.mapbox h2{font-family:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;font-weight:400;font-size:21px;margin:0}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.dep{stroke:#6F7D75;stroke-width:.45;stroke-linejoin:round;cursor:pointer}
+.dep:hover{stroke:var(--ink);stroke-width:1.3}
+.dep.sel{stroke:var(--ink);stroke-width:1.8}
+.insetbox{fill:none;stroke:var(--rule);stroke-width:.8}
+.insetlab{font-size:8.5px;fill:var(--ink-soft)}
+
+.tip{
+  position:fixed;pointer-events:none;z-index:20;background:var(--ink);color:var(--paper);
+  padding:9px 11px;font-size:12.5px;line-height:1.4;max-width:260px;opacity:0;transition:opacity .1s;
+}
+.tip b{font-weight:600}
+.tip .r{color:#F3B6CD}
+
+.legend{margin-top:16px;display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start}
+.ramp{display:flex}
+.ramp i{width:34px;height:13px;display:block}
+.rampticks{position:relative;height:15px;font-size:11px;color:var(--ink-soft);margin-top:4px}
+.rampticks span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.legtitle{font-size:12.5px;color:var(--ink-soft);margin-bottom:6px}
+.bigrid{display:grid;grid-template-columns:repeat(3,24px);grid-template-rows:repeat(3,24px)}
+.bigrid i{display:block;width:24px;height:24px}
+.bilab{font-size:11px;color:var(--ink-soft)}
+
+.panel{border-left:1px solid var(--rule);padding-left:26px}
+.panel h2{
+  font-family:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  font-weight:400;font-size:21px;margin:0 0 4px;
+}
+.panel p.note{font-size:13px;color:var(--ink-soft);margin:0 0 14px;max-width:46ch}
+.stats{display:flex;gap:28px;margin:14px 0 4px;flex-wrap:wrap}
+.stat b{
+  font-family:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  font-size:27px;font-weight:400;display:block;line-height:1.1;
+}
+.stat span{font-size:12px;color:var(--ink-soft)}
+.deptcard{margin-top:24px;border-top:1px solid var(--rule);padding-top:16px;min-height:150px}
+.deptcard h3{
+  font-family:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  font-weight:400;font-size:19px;margin:0 0 2px;
+}
+.deptcard .sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:10px}
+.empty{font-size:13px;color:var(--ink-soft);max-width:44ch}
+.timeline{margin-top:38px;border-top:1px solid var(--rule);padding-top:20px}
+.tlhead{display:flex;gap:28px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-bottom:2px}
+.timeline h2{
+  font-family:"Hoefler Text","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  font-weight:400;font-size:21px;margin:0 0 2px;
+}
+footer{margin-top:40px;border-top:1px solid var(--rule);padding-top:16px;font-size:12.5px;color:var(--ink-soft);max-width:78ch}
+footer p{margin:0 0 8px}
+.axis{font-size:10.5px;fill:var(--ink-soft)}
+.gridline{stroke:var(--rule);stroke-width:.6}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr;gap:26px}
+  .panel{border-left:0;border-top:1px solid var(--rule);padding-left:0;padding-top:20px}
+  .wrap{padding:24px 16px 50px}
+  input[type=range]{width:180px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="kicker"><a class="back" href="../../index.html">Santé publique — démos</a></p>
+  <h1>Ce que la vaccination a fait au méningocoque <em>C</em> — et ce qui reste à faire</h1>
+  <p class="stand">Les infections invasives à méningocoque sont rares, brutales, et inégalement réparties sur le territoire. Depuis 2018, le vaccin contre le sérogroupe C est obligatoire chez le nourrisson ; le vaccin ACWY ne l'est que depuis 2025. Cette carte met côte à côte, département par département, les cas notifiés et la couverture vaccinale correspondante, de 1995 à 2025.</p>
+</header>
+
+<div class="grid">
+  <section class="mapbox">
+    <div class="sechead"><h2 id="mapTitle"></h2></div>
+    <div class="ctlrow">
+      <div class="ctl">
+        <span class="lab" id="l-mode">Ce que montre la carte</span>
+        <div class="seg" id="mode" role="group" aria-labelledby="l-mode">
+          <button data-v="inc" aria-pressed="true">Cas notifiés</button>
+          <button data-v="cov" aria-pressed="false">Couverture</button>
+          <button data-v="bi" aria-pressed="false">Les deux</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <span class="lab" id="l-sero">Sérogroupe</span>
+        <div class="seg" id="sero" role="group" aria-labelledby="l-sero"></div>
+      </div>
+      <div class="ctl">
+        <span class="lab" id="l-win">Cas cumulés sur</span>
+        <div class="seg" id="win" role="group" aria-labelledby="l-win">
+          <button data-v="1" aria-pressed="true">1 an</button>
+          <button data-v="3" aria-pressed="false">3 ans</button>
+          <button data-v="5" aria-pressed="false">5 ans</button>
+        </div>
+      </div>
+    </div>
+    <div class="ctl yearblock">
+      <label class="lab" for="year">Année cartographiée</label>
+      <div class="yearctl">
+        <span class="yearnum" id="yearnum">2025</span>
+        <input type="range" id="year" min="1995" max="2025" step="1" value="2025" aria-label="Année">
+        <button class="play" id="play">Animer</button>
+      </div>
+      <div class="hint" id="yearhint"></div>
+    </div>
+    <svg id="map" role="img" aria-label="Carte des départements français"></svg>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <aside class="panel">
+    <div class="sechead"><h2 id="scatterTitle">Couverture et cas, département par département</h2></div>
+    <div class="ctlrow">
+      <div class="ctl">
+        <label class="lab" for="cov">Indicateur de couverture vaccinale</label>
+        <select id="cov" aria-label="Indicateur de couverture vaccinale"></select>
+      </div>
+    </div>
+    <p class="note" id="scatterNote"></p>
+    <svg id="scatter" viewBox="0 0 460 330" aria-label="Nuage de points couverture vaccinale contre taux de notification"></svg>
+    <div class="stats" id="stats"></div>
+    <div class="deptcard" id="deptcard"></div>
+  </aside>
+</div>
+
+<section class="timeline">
+  <div class="tlhead">
+    <h2>Trente ans de notifications, France entière</h2>
+    <div class="ctl">
+      <span class="lab" id="l-scale">Échelle verticale</span>
+      <div class="seg" id="scale" role="group" aria-labelledby="l-scale">
+        <button data-v="lin" aria-pressed="true">Linéaire</button>
+        <button data-v="log" aria-pressed="false">Logarithmique</button>
+      </div>
+    </div>
+  </div>
+  <p class="note" id="tlnote">Taux annuel pour 100 000 habitants. Cliquez pour changer d'année.</p>
+  <svg id="tl" viewBox="0 0 1180 300" aria-label="Évolution nationale des taux de notification par sérogroupe"></svg>
+</section>
+
+<footer>
+  <p id="foot-src">Données : Santé publique France — notifications obligatoires d'infection invasive à méningocoque (1995-2025) et couvertures vaccinales départementales.</p>
+  <p>Les effectifs départementaux annuels sont très faibles : un ou deux cas suffisent à faire varier fortement un taux. Le cumul sur 3 ou 5 ans lisse ce bruit. Les taux de tous les sérogroupes partagent la même échelle de couleurs, pour que le passage de C à B ou W se lise à sa juste ampleur.</p>
+  <p>Un lien statistique entre couverture et incidence à l'échelle du département ne dit rien des personnes : les vaccinés et les malades n'y sont pas les mêmes individus, et les classes d'âge diffèrent. Huit cas notifiés en 2025 chez des personnes résidant à l'étranger ne figurent pas sur la carte.</p>
+</footer>
+</div>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const D = __DATA__;
+const Y0 = D.years[0], YEARS = D.years, NY = YEARS.length;
+const CODES = Object.keys(D.geo);
+
+const PINK = ['#F6DDE6','#EFB9CE','#E38CAE','#D25587','#B01F5F','#7A0E3D'];
+const TEAL = ['#E0E9E4','#B5D0C9','#84B4AC','#549188','#2C6E66','#154C46'];
+const ZERO = '#EDEFE8';
+const INC_BREAKS = [0.5,1,2,3.5,5.5];   // cases /100k/yr, first class is >0
+const SERO = D.sero;
+
+const state = {mode:'inc', sero:'Tous types', cov:'ACWY1114', win:1, year:2025, sel:null, scale:'lin'};
+
+/* ---------- data helpers ---------- */
+function inc(code, sero, year, win){
+  const arr = (D.cases[code]||{})[sero];
+  if(!arr) return null;
+  const yi = year - Y0;
+  let c=0,p=0,ok=false;
+  for(let k=yi-win+1;k<=yi;k++){
+    if(k<0||k>=NY) continue;
+    const v=arr[k], pp=D.pop[code][k];
+    if(v==null||pp==null) continue;
+    c+=v;p+=pp;ok=true;
+  }
+  return ok?{cases:c,pop:p,rate:1e5*c/p}:null;
+}
+function cover(code, key, year){
+  const t = D.cov[key]; if(!t) return null;
+  const a = t[code]; if(!a) return null;
+  const v = a[year-Y0];
+  return (v==null)?null:v;
+}
+function covMeta(key){ return D.covMeta.find(m=>m.key===key); }
+function covRange(key){
+  let lo=Infinity, hi=-Infinity;
+  const t=D.cov[key]||{};
+  for(const c in t) for(const v of t[c]) if(v!=null){ if(v<lo)lo=v; if(v>hi)hi=v; }
+  if(lo===Infinity) return [0,100];
+  return [Math.floor(lo/5)*5, Math.ceil(hi/5)*5];
+}
+function classify(v, breaks){
+  let i=0; while(i<breaks.length && v>breaks[i]) i++;
+  return i;
+}
+function incColor(r){
+  if(r==null) return null;
+  if(r===0) return ZERO;
+  return PINK[classify(r, INC_BREAKS)];
+}
+function covColor(v, key){
+  if(v==null) return null;
+  const [lo,hi]=covRange(key);
+  const step=(hi-lo)/6;
+  let i=Math.floor((v-lo)/step); i=Math.max(0,Math.min(5,i));
+  return TEAL[i];
+}
+function hex2rgb(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+function rgb2hex(a){return '#'+a.map(v=>Math.round(v).toString(16).padStart(2,'0')).join('');}
+function mix(h1,h2){
+  const a=hex2rgb(h1),b=hex2rgb(h2);
+  return rgb2hex([0,1,2].map(i=>Math.sqrt(a[i]*b[i])));
+}
+const PINK3=[PINK[0],PINK[2],PINK[4]], TEAL3=[TEAL[0],TEAL[2],TEAL[4]];
+function biColor(ci,ii){ return mix(PINK3[ii],TEAL3[ci]); }
+
+function terciles(vals){
+  const s=vals.slice().sort((a,b)=>a-b);
+  if(!s.length) return [0,0];
+  return [s[Math.floor(s.length/3)], s[Math.floor(2*s.length/3)]];
+}
+function tercile(v,t){ return v<=t[0]?0:(v<=t[1]?1:2); }
+
+/* current year data for every department */
+function frame(){
+  const out={};
+  for(const c of CODES){
+    const i = inc(c, state.sero, state.year, state.win);
+    const v = cover(c, state.cov, state.year);
+    out[c]={inc:i, cov:v};
+  }
+  return out;
+}
+
+/* ---------- map ---------- */
+const map = document.getElementById('map');
+const tip = document.getElementById('tip');
+map.setAttribute('viewBox', `-4 -4 ${D.mapW+8} ${D.totalH+8}`);
+const paths = {};
+for(const ins of D.insets){
+  const r=document.createElementNS('http://www.w3.org/2000/svg','rect');
+  r.setAttribute('x',ins.x);r.setAttribute('y',ins.y);r.setAttribute('width',ins.w);r.setAttribute('height',ins.h);
+  r.setAttribute('class','insetbox');map.appendChild(r);
+  const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+  t.setAttribute('x',ins.x);t.setAttribute('y',ins.y-4);t.setAttribute('class','insetlab');
+  t.textContent=ins.nom;map.appendChild(t);
+}
+for(const code of CODES){
+  const p=document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('d',D.geo[code]);
+  p.setAttribute('class','dep');
+  p.dataset.code=code;
+  const ttl=document.createElementNS('http://www.w3.org/2000/svg','title');
+  ttl.textContent=D.names[code]||code; p.appendChild(ttl);
+  p.addEventListener('mousemove',e=>showTip(e,code));
+  p.addEventListener('mouseleave',hideTip);
+  p.addEventListener('click',()=>{state.sel=(state.sel===code?null:code);render();});
+  map.appendChild(p);
+  paths[code]=p;
+}
+let CURF={};
+function showTip(e,code){
+  const f=CURF[code]||{};
+  const m=covMeta(state.cov);
+  const nm=D.names[code]||code;
+  const winTxt = state.win===1?String(state.year):`${state.year-state.win+1}\u2013${state.year}`;
+  let h=`<b>${nm}</b><br>`;
+  if(f.inc) h+=`${f.inc.cases} cas ${state.sero==='Tous types'?'':'de sérogroupe '+state.sero} · ${winTxt}<br><span class="r">${f.inc.rate.toFixed(2)} pour 100 000 / an</span><br>`;
+  else h+=`Cas non disponibles<br>`;
+  h+= (f.cov!=null) ? `Couverture ${m.label.replace('Méningocoques ','').replace('Méningocoque ','')} : ${f.cov.toFixed(1)} %`
+                    : `Couverture non disponible en ${state.year}`;
+  tip.innerHTML=h;
+  tip.style.opacity=1;
+  const pad=14;
+  let x=e.clientX+pad, y=e.clientY+pad;
+  if(x+270>window.innerWidth) x=e.clientX-270;
+  if(y+110>window.innerHeight) y=e.clientY-110;
+  tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+function hideTip(){tip.style.opacity=0;}
+
+function paintMap(F){
+  let ct=null,it=null;
+  if(state.mode==='bi'){
+    const cv=[],iv=[];
+    for(const c of CODES){ if(F[c].cov!=null) cv.push(F[c].cov); if(F[c].inc) iv.push(F[c].inc.rate); }
+    ct=terciles(cv); it=terciles(iv);
+  }
+  for(const c of CODES){
+    const f=F[c]; let col=null;
+    if(state.mode==='inc') col=f.inc?incColor(f.inc.rate):null;
+    else if(state.mode==='cov') col=covColor(f.cov,state.cov);
+    else col=(f.cov!=null&&f.inc)?biColor(tercile(f.cov,ct),tercile(f.inc.rate,it)):null;
+    paths[c].setAttribute('fill',col||'var(--na)');
+    paths[c].classList.toggle('sel', state.sel===c);
+    if(state.sel===c) map.appendChild(paths[c]);
+  }
+  return {ct,it};
+}
+
+/* ---------- legend ---------- */
+function legend(){
+  const el=document.getElementById('legend');
+  const m=covMeta(state.cov);
+  const na = `<div><div class="legtitle">Non disponible</div><div class="ramp"><i style="background:var(--na)"></i></div></div>`;
+  const ticksHtml=(vals,n)=>`<div class="rampticks" style="width:${n*34}px">`+
+    vals.map((v,i)=>`<span style="left:${(i+1)*34}px">${v}</span>`).join('')+`</div>`;
+  if(state.mode==='inc'){
+    el.innerHTML=`<div>
+      <div class="legtitle">Cas pour 100 000 habitants et par an</div>
+      <div class="ramp"><i style="background:${ZERO}"></i>${PINK.map(c=>`<i style="background:${c}"></i>`).join('')}</div>
+      ${ticksHtml(['0'].concat(INC_BREAKS.map(String)),7)}
+    </div>${na}`;
+  } else if(state.mode==='cov'){
+    const [lo,hi]=covRange(state.cov); const st=(hi-lo)/6;
+    const ticks=[1,2,3,4,5,6].map(i=>Math.round(lo+i*st)+' %');
+    el.innerHTML=`<div>
+      <div class="legtitle">${m.label} — couverture</div>
+      <div class="ramp">${TEAL.map(c=>`<i style="background:${c}"></i>`).join('')}</div>
+      ${ticksHtml(ticks,6)}
+      <div class="bilab" style="margin-top:4px">à partir de ${lo} %</div>
+    </div>${na}`;
+  } else {
+    let cells='';
+    for(let ci=2;ci>=0;ci--) for(let ii=0;ii<3;ii++) cells+=`<i style="background:${biColor(ci,ii)}"></i>`;
+    el.innerHTML=`<div style="display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap">
+      <div style="display:flex;gap:9px;align-items:flex-start">
+        <div style="text-align:right;font-size:11px;color:var(--ink-soft);line-height:24px">
+          <div>couverture forte</div><div>&nbsp;</div><div>couverture faible</div></div>
+        <div><div class="bigrid">${cells}</div>
+          <div class="bilab" style="display:flex;justify-content:space-between;width:72px;margin-top:4px">
+            <span>peu</span><span>bcp</span></div>
+          <div class="bilab">de cas</div></div>
+      </div>
+      ${na}
+      <div class="bilab" style="max-width:26ch">Terciles recalculés sur les départements de l'année affichée.</div>
+    </div>`;
+  }
+}
+
+/* ---------- scatter ---------- */
+const NSV='http://www.w3.org/2000/svg';
+function el(n,a){const e=document.createElementNS(NSV,n);for(const k in a)e.setAttribute(k,a[k]);return e;}
+function scatter(F){
+  const s=document.getElementById('scatter');
+  s.innerHTML='';
+  const m=covMeta(state.cov);
+  const note=document.getElementById('scatterNote');
+  const pts=[];
+  for(const c of CODES){ if(F[c].cov!=null&&F[c].inc) pts.push({c, x:F[c].cov, y:F[c].inc.rate, n:F[c].inc.cases}); }
+  if(pts.length<4){
+    note.textContent=`Aucune couverture « ${m.label} » n'est publiée pour ${state.year}. Cet indicateur existe de ${m.years[0]} à ${m.years[m.years.length-1]}.`;
+    document.getElementById('stats').innerHTML='';
+    return;
+  }
+  const winTxt = state.win===1?`en ${state.year}`:`cumulés ${state.year-state.win+1}\u2013${state.year}`;
+  note.innerHTML=`Chaque point est un département : couverture « ${m.label} » en ${state.year}, cas ${state.sero==='Tous types'?'toutes souches':'de sérogroupe '+state.sero} ${winTxt}.`;
+  const W=460,H=330,ml=52,mr=14,mt=14,mb=44;
+  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
+  const xmin=Math.min(...xs), xmax=Math.max(...xs), ymax=Math.max(...ys);
+  const xlo=Math.max(0,Math.floor((xmin-2)/5)*5), xhi=Math.ceil((xmax+2)/5)*5;
+  const yhi=ymax>0?ymax*1.12:1;
+  const X=v=>ml+(v-xlo)/(xhi-xlo)*(W-ml-mr);
+  const Y=v=>H-mb-(v/yhi)*(H-mt-mb);
+  // axes
+  for(let i=0;i<=4;i++){
+    const v=yhi*i/4;
+    s.appendChild(el('line',{x1:ml,x2:W-mr,y1:Y(v),y2:Y(v),class:'gridline'}));
+    const t=el('text',{x:ml-7,y:Y(v)+3.5,class:'axis','text-anchor':'end'});t.textContent=v.toFixed(1);s.appendChild(t);
+  }
+  const nx=5;
+  for(let i=0;i<=nx;i++){
+    const v=xlo+(xhi-xlo)*i/nx;
+    const t=el('text',{x:X(v),y:H-mb+16,class:'axis','text-anchor':'middle'});t.textContent=Math.round(v)+' %';s.appendChild(t);
+  }
+  const xt=el('text',{x:ml,y:H-6,class:'axis'});xt.textContent='couverture vaccinale';s.appendChild(xt);
+  const yt=el('text',{x:ml-40,y:mt+4,class:'axis'});yt.textContent='cas / 100 000 / an';s.appendChild(yt);
+  // regression line
+  const n=pts.length;
+  const mx=xs.reduce((a,b)=>a+b,0)/n, my=ys.reduce((a,b)=>a+b,0)/n;
+  let sxy=0,sxx=0,syy=0;
+  pts.forEach(p=>{sxy+=(p.x-mx)*(p.y-my);sxx+=(p.x-mx)**2;syy+=(p.y-my)**2;});
+  const r=sxy/Math.sqrt(sxx*syy||1);
+  const b=sxy/(sxx||1), a=my-b*mx;
+  s.appendChild(el('line',{x1:X(xlo),y1:Y(Math.max(0,a+b*xlo)),x2:X(xhi),y2:Y(Math.max(0,a+b*xhi)),
+    stroke:'var(--ink)','stroke-width':1,'stroke-dasharray':'4 3',opacity:.55}));
+  pts.forEach(p=>{
+    const cir=el('circle',{cx:X(p.x),cy:Y(p.y),r:state.sel===p.c?6:4,
+      fill:state.sel===p.c?'var(--pink)':'#5C6E64',opacity:state.sel===p.c?1:.62,cursor:'pointer'});
+    cir.addEventListener('mousemove',e=>showTip(e,p.c));
+    cir.addEventListener('mouseleave',hideTip);
+    cir.addEventListener('click',()=>{state.sel=(state.sel===p.c?null:p.c);render();});
+    s.appendChild(cir);
+  });
+  // spearman
+  const rank=arr=>{const idx=arr.map((v,i)=>[v,i]).sort((a,b)=>a[0]-b[0]);const rk=new Array(arr.length);
+    let i=0;while(i<idx.length){let j=i;while(j+1<idx.length&&idx[j+1][0]===idx[i][0])j++;
+    const avg=(i+j)/2+1;for(let k=i;k<=j;k++)rk[idx[k][1]]=avg;i=j+1;}return rk;};
+  const rx=rank(xs), ry=rank(ys);
+  const mrx=rx.reduce((a,b)=>a+b,0)/n, mry=ry.reduce((a,b)=>a+b,0)/n;
+  let a1=0,a2=0,a3=0;
+  for(let i=0;i<n;i++){a1+=(rx[i]-mrx)*(ry[i]-mry);a2+=(rx[i]-mrx)**2;a3+=(ry[i]-mry)**2;}
+  const rho=a1/Math.sqrt(a2*a3||1);
+  const tot=pts.reduce((s,p)=>s+p.n,0);
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><b>${tot}</b><span>cas dans les départements affichés</span></div>
+    <div class="stat"><b>${(pts.reduce((s,p)=>s+p.x,0)/n).toFixed(1)} %</b><span>couverture moyenne</span></div>
+    <div class="stat"><b>${rho.toFixed(2)}</b><span>corrélation de rang (Spearman)</span></div>`;
+}
+
+/* ---------- department card ---------- */
+function deptCard(F){
+  const box=document.getElementById('deptcard');
+  if(!state.sel){
+    box.innerHTML=`<p class="empty">Cliquez sur un département pour suivre son histoire : cas par sérogroupe et couverture vaccinale, année par année.</p>`;
+    return;
+  }
+  const c=state.sel, nm=D.names[c]||c, reg=D.regions[c]||'';
+  const W=460,H=170,ml=40,mr=42,mt=12,mb=26;
+  const X=y=>ml+(y-Y0)/(NY-1)*(W-ml-mr);
+  const rates=[],covs=[];
+  for(const y of YEARS){ const i=inc(c,state.sero,y,state.win); rates.push(i?i.rate:null);
+    covs.push(cover(c,state.cov,y)); }
+  const rmax=Math.max(0.5,...rates.filter(v=>v!=null));
+  const Yr=v=>H-mb-(v/rmax)*(H-mt-mb);
+  const Yc=v=>H-mb-(v/100)*(H-mt-mb);
+  let d='',started=false;
+  rates.forEach((v,i)=>{ if(v==null){started=false;return;} d+=(started?'L':'M')+X(Y0+i).toFixed(1)+' '+Yr(v).toFixed(1); started=true;});
+  let dc='';started=false;
+  covs.forEach((v,i)=>{ if(v==null){started=false;return;} dc+=(started?'L':'M')+X(Y0+i).toFixed(1)+' '+Yc(v).toFixed(1); started=true;});
+  const f=F[c];
+  const m=covMeta(state.cov);
+  box.innerHTML=`<h3>${nm}</h3><div class="sub">${reg}</div>
+   <svg viewBox="0 0 ${W} ${H}" aria-label="Historique du département ${nm}">
+     <line class="gridline" x1="${ml}" x2="${W-mr}" y1="${H-mb}" y2="${H-mb}"></line>
+     <line x1="${X(state.year)}" x2="${X(state.year)}" y1="${mt}" y2="${H-mb}" stroke="var(--ink)" stroke-width=".7" opacity=".45"></line>
+     <path d="${dc}" fill="none" stroke="var(--teal)" stroke-width="1.8"></path>
+     <path d="${d}" fill="none" stroke="var(--pink)" stroke-width="1.8"></path>
+     ${covs.map((v,i)=>v==null?'':`<circle cx="${X(Y0+i).toFixed(1)}" cy="${Yc(v).toFixed(1)}" r="2" fill="var(--teal)"></circle>`).join('')}
+     <text class="axis" x="${ml}" y="${H-8}">${Y0}</text>
+     <text class="axis" x="${W-mr}" y="${H-8}" text-anchor="end">${YEARS[NY-1]}</text>
+     <text class="axis" x="${ml-6}" y="${mt+8}" text-anchor="end" fill="var(--pink)">${rmax.toFixed(1)}</text>
+     <text class="axis" x="${W-mr+6}" y="${mt+8}" fill="var(--teal)">100 %</text>
+   </svg>
+   <div style="font-size:12.5px;color:var(--ink-soft)">
+     ${f.inc?`${f.inc.cases} cas (${f.inc.rate.toFixed(2)} pour 100 000/an)`:'cas non disponibles'} ·
+     ${f.cov!=null?`${f.cov.toFixed(1)} % — ${m.label.toLowerCase()}`:'couverture non disponible'}
+   </div>`;
+}
+
+/* ---------- national timeline ---------- */
+function fmtRate(v){ if(v===0) return '0'; return v>=1?v.toFixed(1):(v>=0.1?v.toFixed(2):v.toFixed(3)); }
+function timeline(){
+  const s=document.getElementById('tl'); s.innerHTML='';
+  const W=1180,H=300,ml=64,mr=66,mt=18,mb=34;
+  const X=y=>ml+(y-Y0)/(NY-1)*(W-ml-mr);
+  const nat={};
+  for(const g of SERO){
+    nat[g]=YEARS.map(y=>{
+      let c=0,p=0,ok=false;
+      for(const code of CODES){ const a=(D.cases[code]||{})[g]; const pp=D.pop[code][y-Y0];
+        if(!a||a[y-Y0]==null||pp==null) continue; c+=a[y-Y0]; p+=pp; ok=true; }
+      return ok?1e5*c/p:null;
+    });
+  }
+  const covNat=YEARS.map(y=>{
+    let s2=0,n=0;
+    const t=D.cov[state.cov]||{};
+    for(const code in t){ const v=t[code][y-Y0]; if(v!=null){s2+=v;n++;} }
+    return n?s2/n:null;
+  });
+  // vertical scale driven by the selected serogroup, so C stays readable
+  const selVals=nat[state.sero].filter(v=>v!=null);
+  const LOG=state.scale==='log';
+  const pos=selVals.filter(v=>v>0);
+  let ylo=0, yhi=Math.max(...selVals)*1.12||1;
+  if(LOG){
+    yhi=Math.max(...pos)*1.8;
+    ylo=Math.max(0.003, Math.min(...pos)/2);
+  }
+  const Yr=v=>{
+    if(LOG){ const vv=Math.max(v,ylo); return H-mb-(Math.log(vv/ylo)/Math.log(yhi/ylo))*(H-mt-mb); }
+    return H-mb-(v/yhi)*(H-mt-mb);
+  };
+  const Yc=v=>H-mb-(v/100)*(H-mt-mb);
+  const inRange=v=>v!=null&&v<=yhi&&(!LOG||v>=ylo);
+  // gridlines
+  let ticks=[];
+  if(LOG){
+    for(let e=-3;e<=1;e++){ for(const m of [1,2,5]){ const v=m*Math.pow(10,e);
+      if(v>=ylo&&v<=yhi) ticks.push(v); } }
+  } else { for(let i=0;i<=4;i++) ticks.push(yhi*i/4); }
+  ticks.forEach(v=>{
+    s.appendChild(el('line',{x1:ml,x2:W-mr,y1:Yr(v),y2:Yr(v),class:'gridline'}));
+    const t=el('text',{x:ml-8,y:Yr(v)+3.5,class:'axis','text-anchor':'end'});
+    t.textContent=fmtRate(v); s.appendChild(t);
+  });
+  const ylab=el('text',{x:ml-8,y:mt-6,class:'axis','text-anchor':'end'});
+  ylab.textContent='cas / 100 000'; s.appendChild(ylab);
+  for(let y=1995;y<=YEARS[NY-1];y+=5){
+    const t=el('text',{x:X(y),y:H-12,class:'axis','text-anchor':'middle'});t.textContent=y;s.appendChild(t);
+  }
+  [[2018,'vaccin C obligatoire'],[2025,'vaccin ACWY obligatoire']].forEach(([y,lab])=>{
+    s.appendChild(el('line',{x1:X(y),x2:X(y),y1:mt,y2:H-mb,stroke:'var(--ink)','stroke-width':.8,'stroke-dasharray':'3 3',opacity:.5}));
+    const t=el('text',{x:X(y)+5,y:mt+11,class:'axis'});t.textContent=lab;s.appendChild(t);
+  });
+  // clip so unselected series never spill out of the frame
+  const defs=el('defs',{}); const cp=el('clipPath',{id:'tlclip'});
+  cp.appendChild(el('rect',{x:ml,y:mt-6,width:W-ml-mr,height:H-mt-mb+6}));
+  defs.appendChild(cp); s.appendChild(defs);
+  const g=el('g',{'clip-path':'url(#tlclip)'}); s.appendChild(g);
+  function line(vals,color,w,op,dots){
+    let d='',started=false;
+    vals.forEach((v,i)=>{ if(v==null){started=false;return;} d+=(started?'L':'M')+X(Y0+i).toFixed(1)+' '+Yr(v).toFixed(1); started=true;});
+    g.appendChild(el('path',{d,fill:'none',stroke:color,'stroke-width':w,opacity:op,'stroke-linejoin':'round'}));
+    if(dots) vals.forEach((v,i)=>{ if(v!=null&&inRange(v)) g.appendChild(el('circle',{cx:X(Y0+i),cy:Yr(v),r:2.4,fill:color})); });
+  }
+  for(const gr of SERO){ if(gr!==state.sero) line(nat[gr],'#94A29A',1,.85,false); }
+  line(nat[state.sero],'var(--pink)',2.6,1,true);
+  // coverage on its own right-hand axis
+  let dc='',started=false;
+  covNat.forEach((v,i)=>{ if(v==null){started=false;return;} dc+=(started?'L':'M')+X(Y0+i).toFixed(1)+' '+Yc(v).toFixed(1); started=true;});
+  g.appendChild(el('path',{d:dc,fill:'none',stroke:'var(--teal)','stroke-width':2.2}));
+  covNat.forEach((v,i)=>{ if(v!=null) g.appendChild(el('circle',{cx:X(Y0+i),cy:Yc(v),r:2.4,fill:'var(--teal)'})); });
+  for(let i=0;i<=4;i++){
+    const v=100*i/4;
+    const t=el('text',{x:W-mr+8,y:Yc(v)+3.5,class:'axis',fill:'var(--teal)'});t.textContent=v+' %';s.appendChild(t);
+  }
+  const clab=el('text',{x:W-mr+8,y:mt-6,class:'axis',fill:'var(--teal)'});
+  clab.textContent='couverture'; s.appendChild(clab);
+  // series labels at the last point that fits in the frame
+  for(const gr of SERO){
+    const vals=nat[gr]; let li=-1;
+    for(let i=NY-1;i>=0;i--){ if(inRange(vals[i])){li=i;break;} }
+    if(li<0) continue;
+    const t=el('text',{x:X(Y0+li)+6,y:Yr(vals[li])+3.5,class:'axis',
+      fill:gr===state.sero?'var(--pink)':'#6E7C74'});
+    t.textContent=gr==='Tous types'?'tous':gr;
+    s.appendChild(t);
+  }
+  s.appendChild(el('line',{x1:X(state.year),x2:X(state.year),y1:mt,y2:H-mb,stroke:'var(--ink)','stroke-width':1.4}));
+  const cur=el('text',{x:X(state.year),y:mt-6,class:'axis','text-anchor':'middle',fill:'var(--ink)'});
+  cur.textContent=state.year; s.appendChild(cur);
+  const hit=el('rect',{x:ml,y:mt,width:W-ml-mr,height:H-mt-mb,fill:'transparent',cursor:'crosshair'});
+  hit.addEventListener('click',ev=>{
+    const bb=s.getBoundingClientRect();
+    const px=(ev.clientX-bb.left)/bb.width*W;
+    let y=Math.round(Y0+(px-ml)/(W-ml-mr)*(NY-1));
+    y=Math.max(Y0,Math.min(YEARS[NY-1],y));
+    setYear(y);
+  });
+  s.appendChild(hit);
+  const gname = state.sero==='Tous types'?'tous sérogroupes confondus':'du sérogroupe '+state.sero;
+  document.getElementById('tlnote').innerHTML=
+    `Taux annuel pour 100 000 habitants. L'échelle verticale suit la courbe ${gname} (en rose) ; les autres sérogroupes restent en gris et sortent du cadre s'ils la dépassent. En vert, à droite, la couverture moyenne « ${covMeta(state.cov).label} ». Cliquez dans le graphique pour changer d'année.`;
+}
+
+/* ---------- controls ---------- */
+const seroBox=document.getElementById('sero');
+SERO.forEach(g=>{
+  const b=document.createElement('button');
+  b.dataset.v=g; b.textContent=g==='Tous types'?'Tous':g;
+  b.setAttribute('aria-pressed', g===state.sero);
+  b.addEventListener('click',()=>{state.sero=g;render();});
+  seroBox.appendChild(b);
+});
+const covSel=document.getElementById('cov');
+D.covMeta.forEach(m=>{
+  const o=document.createElement('option');
+  o.value=m.key;
+  const ys=m.years.length>1?`${m.years[0]}\u2013${m.years[m.years.length-1]}`:m.years[0];
+  o.textContent=`${m.label} (${ys})`;
+  covSel.appendChild(o);
+});
+covSel.value=state.cov;
+covSel.addEventListener('change',()=>{state.cov=covSel.value; clampYear(); render();});
+document.getElementById('mode').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  state.mode=b.dataset.v; clampYear(); render();
+});
+document.getElementById('scale').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  state.scale=b.dataset.v; render();
+});
+document.getElementById('win').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  state.win=+b.dataset.v; render();
+});
+const yrIn=document.getElementById('year');
+yrIn.addEventListener('input',()=>{state.year=+yrIn.value; render();});
+function setYear(y){state.year=y; yrIn.value=y; render();}
+function yearBounds(){
+  if(state.mode==='inc') return [Y0, YEARS[NY-1]];
+  const ys=covMeta(state.cov).years;
+  return [ys[0], ys[ys.length-1]];
+}
+function clampYear(){
+  const [a,b]=yearBounds();
+  yrIn.min=a; yrIn.max=b;
+  if(state.year<a) state.year=a;
+  if(state.year>b) state.year=b;
+  yrIn.value=state.year;
+}
+let timer=null;
+const playBtn=document.getElementById('play');
+playBtn.addEventListener('click',()=>{
+  if(timer){clearInterval(timer);timer=null;playBtn.textContent='Animer';return;}
+  playBtn.textContent='Arrêter';
+  const [a,b]=yearBounds();
+  if(state.year>=b) setYear(a);
+  timer=setInterval(()=>{
+    if(state.year>=b){clearInterval(timer);timer=null;playBtn.textContent='Animer';return;}
+    setYear(state.year+1);
+  },650);
+});
+
+/* ---------- render ---------- */
+function render(){
+  document.querySelectorAll('#mode button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===state.mode));
+  document.querySelectorAll('#sero button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===state.sero));
+  document.querySelectorAll('#win button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===state.win));
+  document.querySelectorAll('#scale button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===state.scale));
+  document.getElementById('yearnum').textContent=state.year;
+  const m0=covMeta(state.cov);
+  const winTxt0 = state.win===1?`en ${state.year}`:`cumulés ${state.year-state.win+1}\u2013${state.year}`;
+  document.getElementById('mapTitle').textContent =
+    state.mode==='inc' ? `Cas ${state.sero==='Tous types'?'toutes souches':'de sérogroupe '+state.sero} ${winTxt0}`
+    : state.mode==='cov' ? `${m0.label} en ${state.year}`
+    : `Cas et couverture croisés en ${state.year}`;
+  const [ya,yb]=yearBounds();
+  document.getElementById('yearhint').textContent = (ya===yb)
+    ? `L'indicateur « ${m0.label} » n'est publié que pour ${ya} : la carte reste sur cette année tant qu'elle affiche la couverture.`
+    : (state.mode==='inc' ? '' : `Cet indicateur couvre ${ya}\u2013${yb}.`);
+  playBtn.disabled=(ya===yb);
+  playBtn.style.opacity=(ya===yb)?.4:1;
+  yrIn.disabled=(ya===yb);
+  const F=frame(); CURF=F;
+  paintMap(F);
+  legend();
+  scatter(F);
+  deptCard(F);
+  timeline();
+}
+clampYear();
+render();
+</script>
+</body>
+</html>

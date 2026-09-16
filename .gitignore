@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+.DS_Store
+
+# Données sources : non versionnées, à retélécharger (voir data/README.md)
+data/*
+!data/README.md
